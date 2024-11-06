@@ -1,0 +1,58 @@
+# Node.js specific
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Production files
+build/
+dist/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.swp
+
+# IDE or editor specific
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+.DS_Store
+Thumbs.db
+
+# Optional lock files
+package-lock.json
+yarn.lock
+
+# Coverage reports
+coverage/
+.nyc_output/
+
+# Mongoose and other database-specific files
+dump/
+data/
+db/
+
+# Cache and output files
+.cache/
+out/
+__pycache__/
+
+# Miscellaneous
+*.bak
+*.old
+*.orig
