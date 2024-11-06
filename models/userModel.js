@@ -1,86 +1,28 @@
-// models/userModel.js
 const mongoose = require('mongoose');
+const baseOptions = {
+    discriminatorKey: 'role', // Adds the 'role' field automatically
+    collection: 'users', // Stores all roles in the same collection
+};
 
-// Base schema for the User model
-const userSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    role: {
-      type: String,
-      required: true,
-      enum: ['user', 'admin', 'supplier', 'producer'],
-      default: 'user',
-    },
-  },
-  {
-    timestamps: true, // Automatically adds createdAt and updatedAt fields
-  }
-);
+const userSchema = new mongoose.Schema({
+    name: String,
+    email: { type: String, unique: true, required: true },
+    password: { type: String, required: true },
+}, baseOptions);
 
-// Virtual field to access user's full name
-userSchema.virtual('fullName').get(function () {
-  return `${this.firstName} ${this.lastName}`;
-});
-
-// Create the base User model
 const User = mongoose.model('User', userSchema);
 
-// Admin Schema - Inherits from User schema
-const adminSchema = new mongoose.Schema(
-  {
-    // Admin-specific fields can be added here if necessary
-  },
-  {
-    timestamps: true,
-  }
-);
-const Admin = User.discriminator('Admin', adminSchema);
+const Supplier = User.discriminator('Supplier', new mongoose.Schema({
+    licenseNumber: { type: String, required: true },
+    inventory: [{ 
+        drugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Drug' },
+        quantity: Number
+    }],
+}));
 
-// Producer Schema - Inherits from User schema
-const producerSchema = new mongoose.Schema(
-  {
-    productionType: {
-      type: String,
-      required: true,
-    },
-    // Producer-specific fields can be added here
-  },
-  {
-    timestamps: true,
-  }
-);
-const Producer = User.discriminator('Producer', producerSchema);
-
-// Supplier Schema - Inherits from User schema
-const supplierSchema = new mongoose.Schema(
-  {
-    companyName: {
-      type: String,
-      required: true,
-    },
-    contactNumber: {
-      type: String,
-      required: true,
-    },
-    // Supplier-specific fields can be added here
-  },
-  {
-    timestamps: true,
-  }
-);
-const Supplier = User.discriminator('Supplier', supplierSchema);
-
-// Export the models
-module.exports = { User, Admin, Producer, Supplier };
+const Consumer = User.discriminator('Consumer', new mongoose.Schema({
+    purchaseHistory: [{ 
+        drugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Drug' },
+        purchaseDate: Date
+    }],
+}));
