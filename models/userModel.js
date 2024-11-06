@@ -1,28 +1,39 @@
+// models/User.js
 const mongoose = require('mongoose');
-const baseOptions = {
-    discriminatorKey: 'role', // Adds the 'role' field automatically
-    collection: 'users', // Stores all roles in the same collection
-};
+const bcrypt = require('bcryptjs');
 
+// Base schema
 const userSchema = new mongoose.Schema({
-    name: String,
+    name: { type: String, required: true },
     email: { type: String, unique: true, required: true },
     password: { type: String, required: true },
-}, baseOptions);
+    role: { type: String, enum: ['admin', 'consumer', 'producer', 'supplier', 'retailer'], required: true },
+});
+
+// Password hashing
+userSchema.pre('save', async function (next) {
+    if (this.isModified('password')) {
+        this.password = await bcrypt.hash(this.password, 10);
+    }
+    next();
+});
+
+// Password validation method
+userSchema.methods.comparePassword = async function (password) {
+    return bcrypt.compare(password, this.password);
+};
 
 const User = mongoose.model('User', userSchema);
 
+// Discriminators for role-based schemas
+const Admin = User.discriminator('Admin', new mongoose.Schema({}));
+const Consumer = User.discriminator('Consumer', new mongoose.Schema({}));
+const Producer = User.discriminator('Producer', new mongoose.Schema({}));
 const Supplier = User.discriminator('Supplier', new mongoose.Schema({
     licenseNumber: { type: String, required: true },
-    inventory: [{ 
-        drugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Drug' },
-        quantity: Number
-    }],
+}));
+const Retailer = User.discriminator('Retailer', new mongoose.Schema({
+    storeName: { type: String, required: true },
 }));
 
-const Consumer = User.discriminator('Consumer', new mongoose.Schema({
-    purchaseHistory: [{ 
-        drugId: { type: mongoose.Schema.Types.ObjectId, ref: 'Drug' },
-        purchaseDate: Date
-    }],
-}));
+module.exports = { User, Admin, Consumer, Producer, Supplier, Retailer };
