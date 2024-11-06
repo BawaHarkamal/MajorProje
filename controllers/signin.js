@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 
 exports.signin = async (req, res) => {
     const { email, password } = req.body;
-
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+        return res.status(400).send('A valid email is required.');
+    }
     try {
         const user = await User.findOne({ email });
         if (!user) return res.status(400).send('User not found');
