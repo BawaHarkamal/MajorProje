@@ -1,8 +1,8 @@
 // controllers/signup.js
-const { Admin, Consumer, Producer, Supplier, Retailer } = require('../models/userModel');
+const User = require('../models/userModel');
 
 exports.signup = async (req, res) => {
-    const { name, email, password, role, licenseNumber, storeName } = req.body;
+    const { name, email, password, role, gst } = req.body;
 
     // Manual validation
     if (!name || typeof name !== 'string' || name.length < 3) {
@@ -14,36 +14,30 @@ exports.signup = async (req, res) => {
     if (!password || typeof password !== 'string' || password.length < 6) {
         return res.status(400).send('Password is required and should be at least 6 characters long.');
     }
-    if (!['admin', 'consumer', 'producer', 'supplier', 'retailer'].includes(role)) {
+    if (!['Supplier', 'Retailer', 'Consumer', 'Manufacturer'].includes(role)) {
         return res.status(400).send('Invalid role.');
     }
-    if (role === 'supplier' && (!licenseNumber || typeof licenseNumber !== 'string')) {
-        return res.status(400).send('License number is required for suppliers.');
-    }
-    if (role === 'retailer' && (!storeName || typeof storeName !== 'string')) {
-        return res.status(400).send('Store name is required for retailers.');
+    if ((role === 'Supplier' || role === 'Retailer' || role === 'Manufacturer') && (!gst || typeof gst !== 'string')) {
+        return res.status(400).send('GST is required for suppliers, retailers, and manufacturers.');
     }
 
     try {
-        let user;
-        switch (role) {
-            case 'admin':
-                user = new Admin({ name, email, password, role });
-                break;
-            case 'consumer':
-                user = new Consumer({ name, email, password, role });
-                break;
-            case 'producer':
-                user = new Producer({ name, email, password, role });
-                break;
-            case 'supplier':
-                user = new Supplier({ name, email, password, role, licenseNumber });
-                break;
-            case 'retailer':
-                user = new Retailer({ name, email, password, role, storeName });
-                break;
+        // Check if a user with the same email already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).send('User with this email already exists.');
         }
 
+        // Create a new user
+        const user = new User({
+            name,
+            email,
+            password,
+            role,
+            gst: role !== 'Consumer' ? gst : undefined // GST is only for Supplier, Retailer, and Manufacturer
+        });
+
+        // Save the user to the database
         await user.save();
         res.status(201).send('User created successfully');
     } catch (error) {

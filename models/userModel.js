@@ -1,39 +1,30 @@
-// models/User.js
+// models/userModel.js
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
-// Base schema
 const userSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    email: { type: String, unique: true, required: true },
-    password: { type: String, required: true },
-    role: { type: String, enum: ['admin', 'consumer', 'producer', 'supplier', 'retailer'], required: true },
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  gst: { type: String, required: function() { return this.role !== 'Consumer'; } },
+  role: {
+    type: String,
+    enum: ['Supplier', 'Retailer', 'Consumer', 'Manufacturer'],
+    required: true
+  },
+  currentMeds: { type: [mongoose.Schema.Types.ObjectId], ref: 'Medicine', required: function() { return this.role === 'Retailer'; } }
 });
 
-// Password hashing
-userSchema.pre('save', async function (next) {
-    if (this.isModified('password')) {
-        this.password = await bcrypt.hash(this.password, 10);
-    }
-    next();
-});
-
-// Password validation method
-userSchema.methods.comparePassword = async function (password) {
-    return bcrypt.compare(password, this.password);
+// Method to compare passwords
+userSchema.methods.comparePassword = async function(password) {
+  return bcrypt.compare(password, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
+// Hash the password before saving the user
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
+});
 
-// Discriminators for role-based schemas
-const Admin = User.discriminator('Admin', new mongoose.Schema({}));
-const Consumer = User.discriminator('Consumer', new mongoose.Schema({}));
-const Producer = User.discriminator('Producer', new mongoose.Schema({}));
-const Supplier = User.discriminator('Supplier', new mongoose.Schema({
-    licenseNumber: { type: String, required: true },
-}));
-const Retailer = User.discriminator('Retailer', new mongoose.Schema({
-    storeName: { type: String, required: true },
-}));
-
-module.exports = { User, Admin, Consumer, Producer, Supplier, Retailer };
+module.exports = mongoose.model('User', userSchema);
