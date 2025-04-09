@@ -9,5 +9,4 @@ router.post('/signup', signup);
 
 // Signin route
 router.post('/signin', signin);
-
 module.exports = router;

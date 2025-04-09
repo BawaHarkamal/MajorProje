@@ -7,7 +7,7 @@ const requestSchema = new mongoose.Schema({
     required: true
   },
   status: { type: String, required: true },
-  producerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  
   supplierId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   retailerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   manufacturerId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

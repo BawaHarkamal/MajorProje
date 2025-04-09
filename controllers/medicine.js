@@ -20,7 +20,7 @@ exports.getMedicines = async (req, res) => {
         const medicines = await Medicine.find()
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate('producerName', 'name'); // Populating producer name
+            .populate('producerId'); // Populating producer name
         const total = await Medicine.countDocuments();
         
         res.json({
@@ -57,3 +57,29 @@ exports.deleteMedicine = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+exports.updateStock = async (req, res) => {
+    try {
+        const { id, quantity } = req.body;
+        const medicine = await Medicine.findById(id);
+        if (!medicine) return res.status(404).json({ message: 'Medicine not found' });
+
+        medicine.stock += quantity;
+        await medicine.save();
+        res.json({ message: 'Stock updated successfully', medicine });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+exports.getStock = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const medicine = await Medicine.findById(id);
+        if (!medicine) return res.status(404).json({ message: 'Medicine not found' });
+
+        res.json({ stock: medicine.stock });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
